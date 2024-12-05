@@ -1,0 +1,79 @@
+#include <Stepper.h>
+const int STEPS = 2048;
+// 스텝모터 설정 (모드: 1-펄스 핀, 2-방향 핀)
+const int speakerPin = 13;
+Stepper motor1(STEPS, 9,11,10,12); // 모터 1: 
+Stepper motor2(STEPS, 5,7,6,8); // 모터 2:
+Stepper motor3(STEPS, 5,3,2,4);
+
+int melody[] = {
+  262, 262, 392, 392, 440, 440, 392, // "Twinkle, twinkle, little star"
+  349, 349, 330, 330, 294, 294, 262, // "How I wonder what you are"
+  392, 392, 349, 349, 330, 330, 294, // "Up above the world so high"
+  392, 392, 349, 349, 330, 330, 294, // "Like a diamond in the sky"
+  262, 262, 392, 392, 440, 440, 392, // "Twinkle, twinkle, little star"
+  349, 349, 330, 330, 294, 294, 262  // "How I wonder what you are"
+};
+
+int noteDurations[] = {
+  4, 4, 4, 4, 4, 4, 2, // 각 음의 길이 (4 = 1/4박자, 2 = 1/2박자)3333333333333233333333333333333333333333333333333333333333333333333333333333333
+  4, 4, 4, 4, 4, 4, 2,
+  4, 4, 4, 4, 4, 4, 2,
+  4, 4, 4, 4, 4, 4, 2,
+  4, 4, 4, 4, 4, 4, 2,
+  4, 4, 4, 4, 4, 4, 2
+};
+void setup() {
+  Serial.begin(9600); // 시리얼 통신 초기화
+  pinMode(speakerPin, OUTPUT);
+  motor1.setSpeed(12);
+  motor2.setSpeed(12);
+  motor3.setSpeed(12);
+  // 모터 속도 설정
+ 
+}
+
+void loop() {
+  // 시리얼 모니터에서 데이터 수신
+  if (Serial.available() > 0) {
+    String command = Serial.readStringUntil('\n'); // 줄바꿈까지 읽기
+    command.trim(); // 공백 제거
+
+    if (command.startsWith("M1")) { // 모터 1 제어 명령
+      int val = command.substring(3).toInt(); // 숫자 추출 //회전각 스템 수
+      motor1.step(val*2048);
+      Serial.println(val);
+      delay(10);
+      
+    } else if (command.startsWith("M2")) { // 모터 2 제어 명령
+      int val = command.substring(3).toInt(); // 숫자 추출
+      
+      motor2.step(val*2048);
+      Serial.println(val);
+      delay(10);
+    } else if (command.startsWith("M3")) { // 모터 3 제어 명령
+      int val = command.substring(3).toInt(); // 숫자 추출
+      
+      motor3.step(val*2048);
+      Serial.println(val);
+      delay(10);
+    } 
+      else if (command.startsWith("S1")) {
+      playMelody();
+    } else {
+      Serial.println("올바른 명령어를 입력하세요!");
+      Serial.println("예: M1 1 또는 M2 2");
+    }
+  }
+}
+void playMelody() {
+  // 멜로디를 스피커로 출력
+  for (int i = 0; i < sizeof(melody) / sizeof(melody[0]); i++) {
+    int noteDuration = 1000 / noteDurations[i];
+    tone(speakerPin, melody[i], noteDuration);
+
+    // 각 음 사이에 약간의 지연을 추가
+    delay(noteDuration * 1.3);
+    noTone(speakerPin);
+  }
+}
